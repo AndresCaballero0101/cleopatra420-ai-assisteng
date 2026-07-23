@@ -1,8 +1,22 @@
 # Cleopatra420 — AI Assisteng de Ciberseguridad
 
+<p align="center">
+  <img src="docs/banner.jpg" alt="Cleopatra420 — AI Assisteng de ciberseguridad defensiva" width="100%" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/AndresCaballero0101/cleopatra420-ai-assisteng/stargazers"><img src="https://img.shields.io/github/stars/AndresCaballero0101/cleopatra420-ai-assisteng?style=for-the-badge" alt="Stars" /></a>
+  <a href="https://github.com/AndresCaballero0101/cleopatra420-ai-assisteng/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AndresCaballero0101/cleopatra420-ai-assisteng?style=for-the-badge" alt="License" /></a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/IA-SpaceXAI%20%2F%20Grok-magenta?style=for-the-badge" alt="SpaceXAI Grok" />
+  <img src="https://img.shields.io/badge/Focus-Defensive%20Security-green?style=for-the-badge" alt="Defensive Security" />
+</p>
+
 Asistente de **ciberseguridad defensiva** en Python con herramientas locales y chat IA potenciado por **SpaceXAI / xAI (Grok)**.
 
 > **Uso ético únicamente.** Este proyecto está pensado para proteger sistemas, aprender defensa y hacer análisis legítimos. No incluye exploits ni ayuda a atacar sistemas de terceros.
+
+**Repo:** [github.com/AndresCaballero0101/cleopatra420-ai-assisteng](https://github.com/AndresCaballero0101/cleopatra420-ai-assisteng)
 
 ---
 
@@ -19,6 +33,22 @@ Asistente de **ciberseguridad defensiva** en Python con herramientas locales y c
 | **Secret scan** | Detecta API keys, JWT, tokens y claves privadas en texto pegado |
 | **Checklist** | Hardening básico de estación de trabajo y cuentas |
 
+### Vista del menú CLI
+
+```
+ 1  Chat IA de ciberseguridad (SpaceXAI / Grok)
+ 2  Generar contraseña segura
+ 3  Analizar fortaleza de contraseña
+ 4  Calcular hash (texto o archivo)
+ 5  Identificar tipo de hash por longitud
+ 6  Analizar URL sospechosa (phishing heuristics)
+ 7  Info de red local / resolver DNS
+ 8  Codificar / decodificar Base64 o Hex
+ 9  Escanear texto en busca de secretos filtrados
+10  Checklist de hardening básico
+ 0  Salir
+```
+
 ---
 
 ## Requisitos
@@ -31,7 +61,7 @@ Asistente de **ciberseguridad defensiva** en Python con herramientas locales y c
 
 ```bash
 # Clonar
-git clone https://github.com/TU_USUARIO/cleopatra420-ai-assisteng.git
+git clone https://github.com/AndresCaballero0101/cleopatra420-ai-assisteng.git
 cd cleopatra420-ai-assisteng
 
 # Dependencias
@@ -53,20 +83,6 @@ py -3 -m cleopatra420
 py -3 "AI assisteng Cleopatra420.py"
 ```
 
-Menú interactivo:
-
-1. Chat IA de ciberseguridad  
-2. Generar contraseña  
-3. Analizar contraseña  
-4. Calcular hash  
-5. Identificar hash  
-6. Analizar URL  
-7. Red local / DNS  
-8. Base64 / Hex  
-9. Escanear secretos  
-10. Checklist de hardening  
-0. Salir  
-
 ### Variables de entorno
 
 | Variable | Descripción | Default |
@@ -82,7 +98,7 @@ Sin API key puedes usar **todas las herramientas locales** (opciones 2–10).
 ## Estructura del proyecto
 
 ```
-AI assisteng/
+cleopatra420-ai-assisteng/
 ├── main.py
 ├── AI assisteng Cleopatra420.py
 ├── requirements.txt
@@ -90,6 +106,10 @@ AI assisteng/
 ├── .gitignore
 ├── README.md
 ├── LICENSE
+├── docs/
+│   └── banner.jpg
+├── scripts/
+│   └── smoke_test.py
 └── cleopatra420/
     ├── __init__.py
     ├── __main__.py
@@ -112,7 +132,7 @@ AI assisteng/
 - Solo opera en **sistemas propios** o con **autorización escrita**.
 - El prompt del modelo **rechaza** pedidos ofensivos (exploits, malware, intrusión).
 - No subas tu `.env` ni claves reales a Git (ya está en `.gitignore`).
-- Si encuentras una vulnerabilidad en este repo, reporta de forma responsable al maintainer.
+- Si encuentras una vulnerabilidad en este repo, reporta de forma responsable abriendo un [issue](https://github.com/AndresCaballero0101/cleopatra420-ai-assisteng/issues).
 
 ---
 
@@ -125,10 +145,19 @@ AI assisteng/
 
 ---
 
+## Topics
+
+`cybersecurity` · `python` · `ai` · `security` · `defensive-security` · `ethical-hacking` · `cli` · `xai` · `grok`
+
+---
+
 ## Licencia
 
 MIT — ver [LICENSE](LICENSE).
 
 ## Autor
 
+**AndresCaballero0101** — [GitHub](https://github.com/AndresCaballero0101)  
 **Cleopatra420 / AI Assisteng** — proyecto de ciberseguridad defensiva.
+
+Si te resulta útil, deja una ⭐ en el repositorio. ¡Gracias!
