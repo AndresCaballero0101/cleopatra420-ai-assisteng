@@ -11,7 +11,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from cleopatra420 import __version__
-from cleopatra420.config import get_settings
+from cleopatra420.config import PROVIDERS, get_settings, list_configured_providers
 from cleopatra420.tools.encoding_tools import decode_base64, encode_base64
 from cleopatra420.tools.hash_tools import hash_text
 from cleopatra420.tools.network_tools import local_network_info
@@ -26,13 +26,21 @@ def main() -> None:
     h = hash_text("cleopatra420", "sha256")
     u = analyze_url("http://192.168.1.1/login/paypal-secure-verify.zip")
     s = scan_text_for_secrets("api_key = AKIAIOSFODNN7EXAMPLEXX")
+    settings = get_settings()
+    providers = list_configured_providers()
     print("version", __version__)
     print("pwd_ok", len(p) == 16, r.strength)
     print("hash", h[:16])
     print("url_risk", u.risk_level, u.risk_score)
     print("secrets", len(s))
     print("b64", decode_base64(encode_base64("hola")))
-    print("settings_ai", get_settings().ai_ready)
+    print("settings_ai", settings.ai_ready)
+    print("provider", settings.provider, settings.model)
+    print("providers_known", len(PROVIDERS), "listed", len(providers))
+    assert "deepseek" in PROVIDERS and "opencloud" in PROVIDERS
+    assert settings.provider in PROVIDERS
+    # Compatibilidad legacy
+    assert settings.xai_model == settings.model
     print(local_network_info().splitlines()[0])
     print("ALL_OK")
 

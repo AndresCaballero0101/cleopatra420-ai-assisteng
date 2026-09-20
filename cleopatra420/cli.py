@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import getpass
+import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -15,7 +17,7 @@ from rich.theme import Theme
 
 from cleopatra420 import __app_name__, __version__
 from cleopatra420.ai_client import AIClientError, CyberAIClient
-from cleopatra420.config import get_settings
+from cleopatra420.config import PROVIDERS, get_settings, list_configured_providers
 from cleopatra420.tools.encoding_tools import (
     decode_base64,
     decode_hex,
@@ -60,7 +62,7 @@ def print_menu() -> None:
     table = Table(title="Menú principal", show_header=True, header_style="bold cyan")
     table.add_column("Opción", style="bold", width=8)
     table.add_column("Acción")
-    table.add_row("1", "Chat IA de ciberseguridad (SpaceXAI / Grok)")
+    table.add_row("1", "Chat IA de ciberseguridad (multi-proveedor)")
     table.add_row("2", "Generar contraseña segura")
     table.add_row("3", "Analizar fortaleza de contraseña")
     table.add_row("4", "Calcular hash (texto o archivo)")
@@ -70,19 +72,85 @@ def print_menu() -> None:
     table.add_row("8", "Codificar / decodificar Base64 o Hex")
     table.add_row("9", "Escanear texto en busca de secretos filtrados")
     table.add_row("10", "Checklist de hardening básico")
+    table.add_row("11", "Ver / cambiar proveedor de IA")
     table.add_row("0", "Salir")
     console.print(table)
+
+
+def show_provider_status(ai: CyberAIClient) -> None:
+    """Muestra el proveedor activo y las claves detectadas en .env."""
+    s = ai.settings
+    status = Table(title="Proveedores de IA", show_header=True, header_style="bold cyan")
+    status.add_column("ID", style="bold", width=12)
+    status.add_column("Nombre")
+    status.add_column("Clave", width=10)
+    status.add_column("Activo", width=8)
+
+    active = s.provider
+    for pid, label, has_key in list_configured_providers():
+        key_col = "[ok]sí[/ok]" if has_key else "[warn]no[/warn]"
+        act_col = "[ok]●[/ok]" if pid == active else ""
+        status.add_row(pid, label, key_col, act_col)
+
+    console.print(status)
+    if s.ai_ready:
+        console.print(
+            f"[ok]Activo:[/ok] [cyan]{s.provider_label}[/cyan] · "
+            f"modelo [cyan]{s.model}[/cyan] · base [dim]{s.base_url or '(default SDK)'}[/dim]"
+        )
+    else:
+        console.print(
+            Panel(
+                s.setup_help(),
+                title="IA no configurada",
+                border_style="yellow",
+            )
+        )
+
+
+def switch_provider(ai: CyberAIClient) -> None:
+    """Cambia el proveedor en runtime (solo sesión actual; no reescribe .env)."""
+    show_provider_status(ai)
+    ids = list(PROVIDERS.keys())
+    console.print(
+        "\n[info]Cambio solo para esta sesión.[/info] "
+        "Para hacerlo permanente, edita [cyan]AI_PROVIDER[/cyan] en [cyan].env[/cyan].\n"
+    )
+    choice = Prompt.ask(
+        "Proveedor",
+        choices=ids + ["cancelar"],
+        default=ai.settings.provider if ai.settings.provider in ids else "xai",
+    )
+    if choice == "cancelar":
+        console.print("[info]Sin cambios.[/info]")
+        return
+
+    os.environ["AI_PROVIDER"] = choice
+    # Relee .env sin pisar el AI_PROVIDER que acabamos de fijar en la sesión
+    load_dotenv(ai.settings.project_root / ".env", override=False)
+    new_settings = get_settings()
+    ai.reload_settings(new_settings)
+    ai.reset()
+
+    if ai.ready:
+        console.print(
+            f"[ok]Proveedor: {ai.provider_label}[/ok] · modelo [cyan]{ai.model}[/cyan]"
+        )
+    else:
+        console.print(
+            f"[warn]Proveedor {choice} seleccionado, pero falta API key "
+            f"({new_settings.key_hint}).[/warn]"
+        )
+        console.print(
+            Panel(new_settings.setup_help(), title="Configuración", border_style="yellow")
+        )
 
 
 def chat_loop(ai: CyberAIClient) -> None:
     if not ai.ready:
         console.print(
             Panel(
-                "No hay [bold]XAI_API_KEY[/bold] configurada.\n"
-                "1. Copia [cyan].env.example[/cyan] → [cyan].env[/cyan]\n"
-                "2. Pega tu clave de [link=https://console.x.ai]https://console.x.ai[/link]\n"
-                "3. Reinicia la app.\n\n"
-                "Las herramientas locales (2–10) funcionan sin API key.",
+                ai.settings.setup_help(),
                 title="IA no configurada",
                 border_style="yellow",
             )
@@ -90,8 +158,12 @@ def chat_loop(ai: CyberAIClient) -> None:
         return
 
     console.print(
-        "[ok]Chat activo.[/ok] Escribe tu consulta de ciberseguridad. "
-        "Comandos: [cyan]/reset[/cyan] limpia historial, [cyan]/back[/cyan] vuelve al menú.\n"
+        f"[ok]Chat activo[/ok] · [cyan]{ai.provider_label}[/cyan] · "
+        f"modelo [cyan]{ai.model}[/cyan]\n"
+        "Escribe tu consulta de ciberseguridad. "
+        "Comandos: [cyan]/reset[/cyan] limpia historial, "
+        "[cyan]/provider[/cyan] muestra proveedor, "
+        "[cyan]/back[/cyan] vuelve al menú.\n"
     )
     while True:
         try:
@@ -107,8 +179,13 @@ def chat_loop(ai: CyberAIClient) -> None:
             ai.reset()
             console.print("[info]Historial reiniciado.[/info]")
             continue
+        if user.lower() in {"/provider", "/prov"}:
+            show_provider_status(ai)
+            continue
         try:
-            with console.status("[info]Consultando Grok…[/info]", spinner="dots"):
+            with console.status(
+                f"[info]Consultando {ai.provider_label}…[/info]", spinner="dots"
+            ):
                 answer = ai.chat(user)
             console.print(Panel(Markdown(answer), title="Cleopatra420", border_style="magenta"))
         except AIClientError as exc:
@@ -256,7 +333,10 @@ def run() -> int:
     ai = CyberAIClient(settings)
 
     if settings.ai_ready:
-        console.print(f"[ok]IA lista[/ok] · modelo [cyan]{settings.xai_model}[/cyan]")
+        console.print(
+            f"[ok]IA lista[/ok] · [cyan]{settings.provider_label}[/cyan] · "
+            f"modelo [cyan]{settings.model}[/cyan]"
+        )
     else:
         console.print("[warn]IA sin API key — modo herramientas locales[/warn]")
 
@@ -271,6 +351,7 @@ def run() -> int:
         "8": tool_encoding,
         "9": tool_secrets,
         "10": tool_hardening_checklist,
+        "11": lambda: switch_provider(ai),
     }
 
     while True:
